@@ -1,0 +1,34 @@
+workflows:
+  ios-hassan:
+    name: Hassan Accounting iOS
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install npm dependencies
+        script: npm install
+      - name: Create iOS native project
+        script: |
+          if [ ! -d "ios/App" ]; then
+            npx cap add ios
+          fi
+      - name: Sync Capacitor
+        script: npx cap sync ios
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install
+      - name: Build iOS app without signing
+        script: |
+          xcodebuild \
+            -workspace "$CM_BUILD_DIR/ios/App/App.xcworkspace" \
+            -scheme "App" \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+    artifacts:
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Debug-iphoneos/*.app
+      - /tmp/xcodebuild_logs/*.log
